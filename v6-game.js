@@ -1,0 +1,28 @@
+/* V6 Adventure Mode — Alan & Hector */
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);let room=0,score=0,step=0;
+const scenes=[
+ {title:'Гектор исчез!',text:'Алан приходит к террариуму и замечает: дверца приоткрыта, а Гектора нет. На песке — следы. Найди три улики в комнате.',kind:'hunt'},
+ {title:'Код на термометре',text:'На стекле термометра Гектор оставил след. Чтобы открыть ящик с камерой, восстанови код.',kind:'math'},
+ {title:'Ночная камера',text:'На записи четыре кадра. Один отличается — именно там Гектор прошёл дальше.',kind:'spot'},
+ {title:'Сверчки разбежались',text:'Гектор остановился возле коробки с кормом. Поймай нужное количество сверчков.',kind:'catch'},
+ {title:'Секретный шкаф',text:'Замок реагирует на английские слова. Собери фразу, чтобы открыть дверь.',kind:'words'},
+ {title:'След ведёт наружу',text:'Проведи Гектора через сетку к маяку, обходя камни.',kind:'maze'}
+];
+function install(){
+ const home=$('#homeView');if(!home||$('#adventureV6'))return;
+ const s=document.createElement('section');s.id='adventureV6';s.className='card adventure6';
+ s.innerHTML='<div class="advTop"><div><div class="kicker">V6 • ПРИКЛЮЧЕНИЕ АЛАНА И ГЕКТОРА</div><h2 id="advTitle">Гектор исчез!</h2></div><div class="advScore">Улики <b id="advScore">0</b>/6</div></div><p id="advText"></p><div id="advWorld" class="advWorld"></div><div id="advMsg" class="advMsg">Касайся объектов и исследуй комнату.</div>';
+ const hero=home.querySelector('.hero');hero?.after(s);render();
+}
+function render(){const x=scenes[room];$('#advTitle').textContent=x.title;$('#advText').textContent=x.text;$('#advScore').textContent=score;const w=$('#advWorld');w.innerHTML='';step=0;if(x.kind==='hunt')hunt(w);if(x.kind==='math')math(w);if(x.kind==='spot')spot(w);if(x.kind==='catch')catchGame(w);if(x.kind==='words')words(w);if(x.kind==='maze')maze(w)}
+function win(msg){score=Math.max(score,room+1);$('#advScore').textContent=score;$('#advMsg').innerHTML='<b>'+msg+'</b> Новая часть маршрута открыта!';if(window.magicBurst)magicBurst('Новая улика!');setTimeout(()=>{room=(room+1)%scenes.length;render()},1300)}
+function hunt(w){w.innerHTML='<div class="room6"><button class="hot h1">следы</button><button class="hot h2">камера</button><button class="hot h3">кожа</button><img src="gecko-real.webp" class="ghostGecko"></div>';let n=0;w.querySelectorAll('.hot').forEach(b=>b.onclick=()=>{if(b.classList.contains('found'))return;b.classList.add('found');b.textContent='✓';n++;$('#advMsg').textContent=`Найдено улик: ${n}/3`;if(n===3)win('Алан нашёл маршрут Гектора.')})}
+function math(w){const a=12+Math.floor(Math.random()*12),b=3+Math.floor(Math.random()*6),ok=a*b;let opts=[ok,ok+b,ok-b,ok+10].sort(()=>Math.random()-.5);w.innerHTML=`<div class="lock6"><div class="code6">${a} × ${b} = ?</div><div class="choices6">${opts.map(v=>`<button>${v}</button>`).join('')}</div></div>`;w.querySelectorAll('button').forEach(bu=>bu.onclick=()=>+bu.textContent===ok?win('Код принят. Ящик открылся.'):($('#advMsg').textContent='Код не подходит. Гектор оставил ещё одну царапину…'))}
+function spot(w){w.innerHTML='<div class="frames6">'+[0,1,2,3].map(i=>`<button class="frame6 ${i===2?'different':''}"><span>21:${10+i*5}</span><i></i></button>`).join('')+'</div>';w.querySelectorAll('.frame6').forEach(b=>b.onclick=()=>b.classList.contains('different')?win('На третьем кадре найден хвост Гектора.'):($('#advMsg').textContent='На этом кадре всё обычно. Сравни тени и следы.'))}
+function catchGame(w){let got=0;w.innerHTML='<div class="catch6"><div class="goal6">Поймай 6 сверчков: <b id="caught6">0</b>/6</div><div class="field6"></div></div>';const f=w.querySelector('.field6');for(let i=0;i<10;i++){let c=document.createElement('button');c.className='cricket6';c.textContent='✦';c.style.left=(5+Math.random()*85)+'%';c.style.top=(8+Math.random()*75)+'%';c.onclick=()=>{if(c.disabled)return;c.disabled=true;c.style.opacity=.15;got++;$('#caught6').textContent=got;if(got===6)win('Корм собран. Гектор снова двинулся по следу.')};f.append(c)}}
+function words(w){let order=[];const target=['Hector','is','under','the','rock'];let mix=[...target].sort(()=>Math.random()-.5);w.innerHTML='<div class="sentence6" id="sentence6">…</div><div class="words6">'+mix.map(x=>`<button>${x}</button>`).join('')+'</div><button class="check6">Открыть замок</button>';w.querySelectorAll('.words6 button').forEach(b=>b.onclick=()=>{if(b.disabled)return;b.disabled=true;order.push(b.textContent);$('#sentence6').textContent=order.join(' ')});w.querySelector('.check6').onclick=()=>order.join(' ')===target.join(' ')?win('Фраза верна. Замок открылся.'):($('#advMsg').textContent='Замок мигает красным. Нужен другой порядок слов.')}
+function maze(w){const rocks=new Set(['1,3','2,3','2,2','3,1']),goal='4,0';let p=[0,4];w.innerHTML='<div class="mazeWrap6"><div class="maze6"></div><div class="pad6"><button>↑</button><button>←</button><button>↓</button><button>→</button></div></div>';const g=w.querySelector('.maze6');function draw(){g.innerHTML='';for(let y=0;y<5;y++)for(let x=0;x<5;x++){let c=document.createElement('i'),k=x+','+y;c.className=rocks.has(k)?'rock6':'';if(k===goal)c.textContent='📡';if(x===p[0]&&y===p[1])c.textContent='🦎';g.append(c)}}function mv(dx,dy){let x=p[0]+dx,y=p[1]+dy,k=x+','+y;if(x<0||x>4||y<0||y>4||rocks.has(k))return;p=[x,y];draw();if(k===goal)win('Гектор добрался до маяка. Первая глава завершена!')}let bs=w.querySelectorAll('.pad6 button');bs[0].onclick=()=>mv(0,-1);bs[1].onclick=()=>mv(-1,0);bs[2].onclick=()=>mv(0,1);bs[3].onclick=()=>mv(1,0);draw()}
+window.addEventListener('load',install);
+})();
