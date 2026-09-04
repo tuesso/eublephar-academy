@@ -1,0 +1,5 @@
+/* Alan + Hector story layer */
+#alanStory{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(239,196,105,.09),rgba(15,27,35,.96));box-shadow:0 22px 60px rgba(0,0,0,.3)}
+#alanStory:after{content:'HECTOR';position:absolute;right:-12px;bottom:-14px;font-size:64px;font-weight:950;letter-spacing:.08em;color:rgba(239,196,105,.035);pointer-events:none}
+#alanStory h3{color:#f5e7c6}.alan-teaser{letter-spacing:.02em}.node.current .alan-teaser{animation:alanPulse 1.8s ease-in-out infinite}@keyframes alanPulse{50%{opacity:.48}}
+@media(max-width:600px){#alanStory{padding:16px!important}#alanStory h3{font-size:19px!important}#alanStory:after{font-size:40px}}
