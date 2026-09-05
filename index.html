@@ -940,18 +940,150 @@ function dropSort(kind,zone){
   }else{beep(false);document.getElementById("gameStatus").textContent="Не подходит. Проверь: этот объект живой или неживой?";sortSelected.classList.remove("selected");sortSelected=null}
 }
 
-/* Sentence */
-let sentOrder=[];
-function gameSentence(){
-  setGameHeader("Собери английскую фразу","Коснись слов в правильном порядке. Нужно получить: «Эублефар активен ночью».");
-  sentOrder=[];const words=shuffle(["The","gecko","is","active","at","night"]);
-  document.getElementById("gameBoard").innerHTML='<div class="sentence-line" id="sentenceLine"><span class="small">Здесь появится фраза…</span></div><div class="sentence-bank" id="sentenceBank"></div><div class="actions"><button class="secondary" onclick="resetSentence()">Сбросить</button><button class="primary" onclick="checkSentence()">Проверить</button></div>';
-  const b=document.getElementById("sentenceBank");words.forEach((w,i)=>{const e=document.createElement("button");e.className="word-chip";e.textContent=w;e.dataset.word=w;e.onclick=()=>addSentence(e);b.appendChild(e)})
+/* Sentence: 90 translated tasks, persistent no-repeat decks. */
+const sentenceLevels=['Начальный','Средний','Сложный'];
+const sentenceData=[
+`Hector is small|Гектор маленький
+Alan is happy|Алан счастлив
+The gecko sleeps|Эублефар спит
+The cricket jumps|Сверчок прыгает
+I like animals|Мне нравятся животные
+We study English|Мы изучаем английский
+This is water|Это вода
+That is sand|То — песок
+The rock is warm|Камень тёплый
+The room is quiet|В комнате тихо
+My bag is blue|Моя сумка синяя
+The book is interesting|Книга интересная
+I have a pencil|У меня есть карандаш
+She has a camera|У неё есть камера
+He likes puzzles|Ему нравятся головоломки
+We are friends|Мы друзья
+They are ready|Они готовы
+Open the book|Открой книгу
+Close the door|Закрой дверь
+Find the key|Найди ключ
+Look at Hector|Посмотри на Гектора
+Count the stars|Посчитай звёзды
+The sky is dark|Небо тёмное
+The sun is bright|Солнце яркое
+My sister draws|Моя сестра рисует
+The children play|Дети играют
+I can swim|Я умею плавать
+Birds can fly|Птицы умеют летать
+The water is clean|Вода чистая
+Our team wins|Наша команда побеждает`,
+`The gecko is active at night|Эублефар активен ночью
+Hector is under the rock|Гектор под камнем
+Alan opens the secret door|Алан открывает секретную дверь
+I read books every day|Я читаю книги каждый день
+She is drawing a gecko|Она рисует эублефара
+We are looking for clues|Мы ищем улики
+There is a key inside|Внутри есть ключ
+The camera is on the table|Камера на столе
+My brother likes English lessons|Моему брату нравятся уроки английского
+Hector has a spotted tail|У Гектора пятнистый хвост
+We need a new map|Нам нужна новая карта
+I can see five stars|Я вижу пять звёзд
+The little cricket is hiding|Маленький сверчок прячется
+Please put down the pencil|Пожалуйста, положи карандаш
+Do you like this story|Тебе нравится эта история?
+Where is the blue notebook|Где синяя тетрадь?
+What colour is your bag|Какого цвета твоя сумка?
+How many rocks are there|Сколько там камней?
+The children are solving puzzles|Дети решают головоломки
+We do not know the answer|Мы не знаем ответа
+Alan does not like noise|Алан не любит шум
+This box is very heavy|Эта коробка очень тяжёлая
+The path leads to the tower|Тропинка ведёт к башне
+I am learning new words|Я учу новые слова
+Our teacher explains the task|Наш учитель объясняет задание
+The door is behind you|Дверь позади тебя
+There are three empty boxes|Есть три пустые коробки
+Can you open this window|Ты можешь открыть это окно?
+My friend has a red bicycle|У моего друга красный велосипед
+We found a small feather|Мы нашли маленькое перо`,
+`Alan is reading a book about animals|Алан читает книгу о животных
+Hector is hiding behind the big rock|Гектор прячется за большим камнем
+We must check the map before leaving|Мы должны проверить карту перед уходом
+The children found a key near the tower|Дети нашли ключ возле башни
+I want to learn more about nature|Я хочу узнать больше о природе
+Can you help me solve this puzzle|Ты можешь помочь мне решить эту головоломку?
+There is a small camera above the door|Над дверью есть маленькая камера
+My sister is writing a story about Hector|Моя сестра пишет рассказ о Гекторе
+We are going to visit the museum|Мы собираемся посетить музей
+Alan has already found the first clue|Алан уже нашёл первую улику
+The blue box is bigger than mine|Синяя коробка больше моей
+This puzzle is easier than the last one|Эта головоломка легче предыдущей
+Hector came out when it got dark|Гектор вышел, когда стемнело
+I cannot find my notebook anywhere|Я нигде не могу найти свою тетрадь
+Please tell me where the library is|Пожалуйста, скажи мне, где библиотека
+We saw three birds near the river|Мы увидели трёх птиц возле реки
+The scientist is looking through a microscope|Учёный смотрит в микроскоп
+Alan took a picture of the old tower|Алан сфотографировал старую башню
+Do you remember where we put the key|Ты помнишь, куда мы положили ключ?
+The next clue is inside this envelope|Следующая улика внутри этого конверта
+We stayed at home because it rained|Мы остались дома, потому что шёл дождь
+I will show you my new drawing|Я покажу тебе свой новый рисунок
+The stars are brighter than the distant lights|Звёзды ярче далёких огней
+She carefully opened the old wooden box|Она осторожно открыла старую деревянную коробку
+How many questions have you answered today|На сколько вопросов ты сегодня ответил?
+We need to cross the bridge together|Нам нужно вместе перейти мост
+Alan was happy to see his friend|Алан был рад видеть своего друга
+There are two footprints beside the window|Рядом с окном есть два следа
+I think we have found the right path|Думаю, мы нашли правильную тропинку
+The adventure begins when you open this book|Приключение начинается, когда ты открываешь эту книгу`
+];
+const sentenceBank=sentenceData.flatMap((text,level)=>text.split('\n').map(row=>{const [en,ru]=row.split('|');return {en,ru,level,id:en}}));
+let sentOrder=[],sentCurrent=null,sentSolved=false,sentHint=0,sentTokens=[];
+function sentenceProgress(){
+  if(!state.sentencePractice||typeof state.sentencePractice!=='object')state.sentencePractice={};
+  const p=state.sentencePractice;
+  if(!Array.isArray(p.seen))p.seen=[];
+  if(!Array.isArray(p.mastered))p.mastered=[];
+  if(![0,1,2].includes(p.level))p.level=0;
+  return p;
 }
-function addSentence(el){if(el.classList.contains("used"))return;el.classList.add("used");sentOrder.push(el.dataset.word);renderSentenceLine()}
-function renderSentenceLine(){const l=document.getElementById("sentenceLine");l.innerHTML=sentOrder.length?sentOrder.map(w=>`<span class="word-chip">${w}</span>`).join(""):'<span class="small">Здесь появится фраза…</span>'}
-function resetSentence(){sentOrder=[];document.querySelectorAll("#sentenceBank .word-chip").forEach(e=>e.classList.remove("used"));renderSentenceLine()}
-function checkSentence(){const ok=sentOrder.join(" ")==="The gecko is active at night";if(ok)gameWin("sentence","Фраза собрана правильно.");else{beep(false);document.getElementById("gameStatus").textContent="Порядок пока неверный. Подсказка: The gecko → is active → at night."}}
+function gameSentence(){
+  const p=sentenceProgress(),pool=sentenceBank.filter(q=>q.level===p.level);
+  let remaining=pool.filter(q=>!p.seen.includes(q.id));
+  if(!remaining.length){p.seen=p.seen.filter(id=>!pool.some(q=>q.id===id));remaining=pool.filter(q=>q.id!==p.last)}
+  sentCurrent=remaining[Math.floor(Math.random()*remaining.length)];
+  p.seen.push(sentCurrent.id);p.last=sentCurrent.id;sentOrder=[];sentSolved=false;sentHint=0;save();
+  setGameHeader('Собери английскую фразу','Составь перевод: «'+sentCurrent.ru+'». Нажми слово в ответе, чтобы вернуть его.');
+  document.getElementById('gameStatus').className='game-status';
+  document.getElementById('gameStatus').textContent='Выбирай слова по порядку. Знак в конце предложения добавлять не нужно.';
+  document.getElementById('gameBoard').innerHTML='<div class="actions" id="sentenceLevels"></div><p class="small" id="sentenceProgress"></p><div class="sentence-line" id="sentenceLine"></div><div class="sentence-bank" id="sentenceBank"></div><div class="actions"><button class="secondary" onclick="resetSentence()">Сбросить фразу</button><button class="secondary" id="sentenceHint" onclick="hintSentence()">Подсказка</button><button class="primary" id="sentenceCheck" onclick="checkSentence()">Проверить</button><button class="secondary" onclick="gameSentence()" id="sentenceNext">Другая фраза →</button></div>';
+  sentenceLevels.forEach((name,level)=>{const b=document.createElement('button');b.className=level===p.level?'primary':'secondary';b.textContent=name;b.setAttribute('aria-pressed',String(level===p.level));b.onclick=()=>{p.level=level;gameSentence()};document.getElementById('sentenceLevels').appendChild(b)});
+  updateSentenceProgress();
+  const target=sentCurrent.en.split(' ');let words=shuffle([...target]);
+  if(words.join(' ')===sentCurrent.en)words.push(words.shift());
+  sentTokens=words;
+  words.forEach((w,i)=>{const b=document.createElement('button');b.className='word-chip';b.textContent=w;b.dataset.index=i;b.onclick=()=>addSentence(b);document.getElementById('sentenceBank').appendChild(b)});
+  renderSentenceLine();
+}
+function updateSentenceProgress(){const p=sentenceProgress();document.getElementById('sentenceProgress').textContent='90 фраз · На уровне: 30 · Собрано: '+sentenceBank.filter(q=>q.level===p.level&&p.mastered.includes(q.id)).length+'/30 · Всего: '+sentenceBank.filter(q=>p.mastered.includes(q.id)).length+'/90'}
+function addSentence(el){if(sentSolved||el.disabled)return;el.disabled=true;el.classList.add('used');sentOrder.push(Number(el.dataset.index));renderSentenceLine()}
+function renderSentenceLine(){
+  const l=document.getElementById('sentenceLine');l.replaceChildren();
+  if(!sentOrder.length){l.textContent='Здесь появится фраза…';return}
+  sentOrder.forEach((index,pos)=>{const b=document.createElement('button');b.className='word-chip';b.textContent=sentTokens[index];b.disabled=sentSolved;b.setAttribute('aria-label','Вернуть слово '+sentTokens[index]);b.onclick=()=>{if(sentSolved)return;sentOrder.splice(pos,1);const token=document.querySelector('#sentenceBank [data-index="'+index+'"]');token.disabled=false;token.classList.remove('used');renderSentenceLine()};l.appendChild(b)});
+}
+function resetSentence(){if(sentSolved)return;sentOrder=[];document.querySelectorAll('#sentenceBank .word-chip').forEach(e=>{e.disabled=false;e.classList.remove('used')});renderSentenceLine()}
+function hintSentence(){if(sentSolved)return;const words=sentCurrent.en.split(' ');sentHint=Math.min(words.length,sentHint+1);document.getElementById('gameStatus').textContent='Начало фразы: '+words.slice(0,sentHint).join(' ')+(sentHint<words.length?' …':'')}
+function checkSentence(){
+  if(sentSolved)return;
+  const status=document.getElementById('gameStatus');
+  if(sentOrder.length!==sentTokens.length){beep(false);status.textContent='Используй все слова: осталось '+(sentTokens.length-sentOrder.length)+'.';return}
+  if(sentOrder.map(i=>sentTokens[i]).join(' ')!==sentCurrent.en){beep(false);status.textContent='Попробуй другой порядок. Слово можно вернуть нажатием или воспользоваться подсказкой.';return}
+  sentSolved=true;const p=sentenceProgress();if(!p.mastered.includes(sentCurrent.id))p.mastered.push(sentCurrent.id);
+  gameWin('sentence:'+sentCurrent.id,'Верно! '+sentCurrent.en+'. — '+sentCurrent.ru);
+  document.getElementById('sentenceCheck').disabled=true;document.getElementById('sentenceHint').disabled=true;
+  document.getElementById('sentenceNext').textContent='Следующая фраза →';
+  renderSentenceLine();updateSentenceProgress();
+  if(typeof window.magicBurst==='function')window.magicBurst('Фраза собрана!');
+}
+
 
 /* Coordinates */
 let player={x:0,y:4},goal={x:4,y:0};const rocks=new Set(["1,3","2,3","2,2","3,1"]);
